@@ -305,7 +305,7 @@ def unify(t1, t2):
     elif isinstance(a, TypeOperator) and isinstance(b, TypeVariable):
         unify(b, a)
     elif isinstance(a, TypeOperator) and isinstance(b, TypeOperator):
-        if (a.name != b.name or len(a.types) != len(b.types)):
+        if a.name != b.name or len(a.types) != len(b.types):
             raise InferenceError("Type mismatch: {0} != {1}".format(str(a), str(b)))
         for p, q in zip(a.types, b.types):
             unify(p, q)
