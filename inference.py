@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-'''
+"""
 .. module:: hindley_milner
    :synopsis: An implementation of the Hindley Milner type checking algorithm
               based on the Scala code by Andrew Forrest, the Perl code by
               Nikita Borisov and the paper "Basic Polymorphic Typechecking"
               by Cardelli.
 .. moduleauthor:: Robert Smallshire
-'''
+"""
 
 from __future__ import print_function
 
@@ -75,7 +75,7 @@ class Letrec(object):
 # =======================================================#
 # Exception types
 
-class TypeError(Exception):
+class InferenceError(Exception):
     """Raised if the type inference algorithm cannot infer types successfully"""
 
     def __init__(self, message):
@@ -192,7 +192,7 @@ def analyse(node, env, non_generic=None):
         The computed type of the expression.
 
     Raises:
-        TypeError: The type of the expression could not be inferred, for example
+        InferenceError: The type of the expression could not be inferred, for example
             if it is not possible to unify two types such as Integer and Bool
         ParseError: The abstract syntax tree rooted at node could not be parsed
     """
@@ -293,7 +293,7 @@ def unify(t1, t2):
         None
 
     Raises:
-        TypeError: Raised if the types cannot be unified.
+        InferenceError: Raised if the types cannot be unified.
     """
 
     a = prune(t1)
@@ -301,13 +301,13 @@ def unify(t1, t2):
     if isinstance(a, TypeVariable):
         if a != b:
             if occursInType(a, b):
-                raise TypeError("recursive unification")
+                raise InferenceError("recursive unification")
             a.instance = b
     elif isinstance(a, TypeOperator) and isinstance(b, TypeVariable):
         unify(b, a)
     elif isinstance(a, TypeOperator) and isinstance(b, TypeOperator):
         if (a.name != b.name or len(a.types) != len(b.types)):
-            raise TypeError("Type mismatch: {0} != {1}".format(str(a), str(b)))
+            raise InferenceError("Type mismatch: {0} != {1}".format(str(a), str(b)))
         for p, q in zip(a.types, b.types):
             unify(p, q)
     else:
@@ -424,7 +424,7 @@ def tryExp(env, node):
     try:
         t = analyse(node, env)
         print(str(t))
-    except (ParseError, TypeError) as e:
+    except (ParseError, InferenceError) as e:
         print(e)
 
 
