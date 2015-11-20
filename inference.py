@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-.. module:: hindley_milner
+.. module:: inference
    :synopsis: An implementation of the Hindley Milner type checking algorithm
               based on the Scala code by Andrew Forrest, the Perl code by
               Nikita Borisov and the paper "Basic Polymorphic Typechecking"
@@ -27,8 +27,8 @@ class Lambda(object):
         return "(fn {v} => {body})".format(v=self.v, body=self.body)
 
 
-class Ident(object):
-    """Identfier"""
+class Identifier(object):
+    """Identifier"""
 
     def __init__(self, name):
         self.name = name
@@ -199,7 +199,7 @@ def analyse(node, env, non_generic=None):
     if non_generic is None:
         non_generic = set()
 
-    if isinstance(node, Ident):
+    if isinstance(node, Identifier):
         return get_type(node.name, env, non_generic)
     elif isinstance(node, Apply):
         fun_type = analyse(node.fn, env, non_generic)
@@ -379,7 +379,7 @@ def occurs_in(t, types):
     """Checks whether a types variable occurs in any other types.
 
     Args:
-        v:  The TypeVariable to be tested for
+        t:  The TypeVariable to be tested for
         types: The sequence of types in which to search
 
     Returns:
@@ -452,7 +452,11 @@ def main():
               "pred": Function(Integer, Integer),
               "times": Function(Integer, Function(Integer, Integer))}
 
-    pair = Apply(Apply(Ident("pair"), Apply(Ident("f"), Ident("4"))), Apply(Ident("f"), Ident("true")))
+    pair = Apply(Apply(Identifier("pair"),
+                       Apply(Identifier("f"),
+                             Identifier("4"))),
+                 Apply(Identifier("f"),
+                       Identifier("true")))
 
     examples = [
         # factorial
@@ -460,57 +464,57 @@ def main():
                Lambda("n",  # fn n =>
                       Apply(
                           Apply(  # cond (zero n) 1
-                              Apply(Ident("cond"),  # cond (zero n)
-                                    Apply(Ident("zero"), Ident("n"))),
-                              Ident("1")),
+                              Apply(Identifier("cond"),  # cond (zero n)
+                                    Apply(Identifier("zero"), Identifier("n"))),
+                              Identifier("1")),
                           Apply(  # times n
-                              Apply(Ident("times"), Ident("n")),
-                              Apply(Ident("factorial"),
-                                    Apply(Ident("pred"), Ident("n")))
+                              Apply(Identifier("times"), Identifier("n")),
+                              Apply(Identifier("factorial"),
+                                    Apply(Identifier("pred"), Identifier("n")))
                           )
                       )
                       ),  # in
-               Apply(Ident("factorial"), Ident("5"))
+               Apply(Identifier("factorial"), Identifier("5"))
                ),
 
         # Should fail:
         # fn x => (pair(x(3) (x(true)))
         Lambda("x",
                Apply(
-                   Apply(Ident("pair"),
-                         Apply(Ident("x"), Ident("3"))),
-                   Apply(Ident("x"), Ident("true")))),
+                   Apply(Identifier("pair"),
+                         Apply(Identifier("x"), Identifier("3"))),
+                   Apply(Identifier("x"), Identifier("true")))),
 
         # pair(f(3), f(true))
         Apply(
-            Apply(Ident("pair"), Apply(Ident("f"), Ident("4"))),
-            Apply(Ident("f"), Ident("true"))),
+            Apply(Identifier("pair"), Apply(Identifier("f"), Identifier("4"))),
+            Apply(Identifier("f"), Identifier("true"))),
 
         # let f = (fn x => x) in ((pair (f 4)) (f true))
-        Let("f", Lambda("x", Ident("x")), pair),
+        Let("f", Lambda("x", Identifier("x")), pair),
 
         # fn f => f f (fail)
-        Lambda("f", Apply(Ident("f"), Ident("f"))),
+        Lambda("f", Apply(Identifier("f"), Identifier("f"))),
 
         # let g = fn f => 5 in g g
         Let("g",
-            Lambda("f", Ident("5")),
-            Apply(Ident("g"), Ident("g"))),
+            Lambda("f", Identifier("5")),
+            Apply(Identifier("g"), Identifier("g"))),
 
         # example that demonstrates generic and non-generic variables:
         # fn g => let f = fn x => g in pair (f 3, f true)
         Lambda("g",
                Let("f",
-                   Lambda("x", Ident("g")),
+                   Lambda("x", Identifier("g")),
                    Apply(
-                       Apply(Ident("pair"),
-                             Apply(Ident("f"), Ident("3"))
+                       Apply(Identifier("pair"),
+                             Apply(Identifier("f"), Identifier("3"))
                              ),
-                       Apply(Ident("f"), Ident("true"))))),
+                       Apply(Identifier("f"), Identifier("true"))))),
 
         # Function composition
         # fn f (fn g (fn arg (f g arg)))
-        Lambda("f", Lambda("g", Lambda("arg", Apply(Ident("g"), Apply(Ident("f"), Ident("arg"))))))
+        Lambda("f", Lambda("g", Lambda("arg", Apply(Identifier("g"), Apply(Identifier("f"), Identifier("arg"))))))
     ]
 
     for example in examples:
