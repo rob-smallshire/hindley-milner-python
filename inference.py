@@ -200,7 +200,7 @@ def analyse(node, env, non_generic=None):
         non_generic = set()
 
     if isinstance(node, Ident):
-        return getType(node.name, env, non_generic)
+        return get_type(node.name, env, non_generic)
     elif isinstance(node, Apply):
         fun_type = analyse(node.fn, env, non_generic)
         arg_type = analyse(node.arg, env, non_generic)
@@ -232,7 +232,7 @@ def analyse(node, env, non_generic=None):
     assert 0, "Unhandled syntax node {0}".format(type(node))
 
 
-def getType(name, env, non_generic):
+def get_type(name, env, non_generic):
     """Get the type of identifier name from the type environment env.
 
     Args:
@@ -246,7 +246,7 @@ def getType(name, env, non_generic):
     """
     if name in env:
         return fresh(env[name], non_generic)
-    elif isIntegerLiteral(name):
+    elif is_integer_literal(name):
         return Integer
     else:
         raise ParseError("Undefined symbol {0}".format(name))
@@ -267,7 +267,7 @@ def fresh(t, non_generic):
     def freshrec(tp):
         p = prune(tp)
         if isinstance(p, TypeVariable):
-            if isGeneric(p, non_generic):
+            if is_generic(p, non_generic):
                 if p not in mappings:
                     mappings[p] = TypeVariable()
                 return mappings[p]
@@ -299,7 +299,7 @@ def unify(t1, t2):
     b = prune(t2)
     if isinstance(a, TypeVariable):
         if a != b:
-            if occursInType(a, b):
+            if occurs_in_type(a, b):
                 raise InferenceError("recursive unification")
             a.instance = b
     elif isinstance(a, TypeOperator) and isinstance(b, TypeVariable):
@@ -336,7 +336,7 @@ def prune(t):
     return t
 
 
-def isGeneric(v, non_generic):
+def is_generic(v, non_generic):
     """Checks whether a given variable occurs in a list of non-generic variables
 
     Note that a variables in such a list may be instantiated to a type term,
@@ -352,10 +352,10 @@ def isGeneric(v, non_generic):
     Returns:
         True if v is a generic variable, otherwise False
     """
-    return not occursIn(v, non_generic)
+    return not occurs_in(v, non_generic)
 
 
-def occursInType(v, type2):
+def occurs_in_type(v, type2):
     """Checks whether a type variable occurs in a type expression.
 
     Note: Must be called with v pre-pruned
@@ -371,11 +371,11 @@ def occursInType(v, type2):
     if pruned_type2 == v:
         return True
     elif isinstance(pruned_type2, TypeOperator):
-        return occursIn(v, pruned_type2.types)
+        return occurs_in(v, pruned_type2.types)
     return False
 
 
-def occursIn(t, types):
+def occurs_in(t, types):
     """Checks whether a types variable occurs in any other types.
 
     Args:
@@ -385,10 +385,10 @@ def occursIn(t, types):
     Returns:
         True if t occurs in any of types, otherwise False
     """
-    return any(occursInType(t, t2) for t2 in types)
+    return any(occurs_in_type(t, t2) for t2 in types)
 
 
-def isIntegerLiteral(name):
+def is_integer_literal(name):
     """Checks whether name is an integer literal string.
 
     Args:
@@ -409,7 +409,7 @@ def isIntegerLiteral(name):
 # Example code to exercise the above
 
 
-def tryExp(env, node):
+def try_exp(env, node):
     """Try to evaluate a type printing the result or reporting errors.
 
     Args:
@@ -514,7 +514,7 @@ def main():
     ]
 
     for example in examples:
-        tryExp(my_env, example)
+        try_exp(my_env, example)
 
 
 if __name__ == '__main__':
