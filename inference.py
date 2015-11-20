@@ -153,7 +153,7 @@ class TypeOperator(object):
         elif num_types == 2:
             return "({0} {1} {2})".format(str(self.types[0]), self.name, str(self.types[1]))
         else:
-            return "{0} {1}" % (self.name, ' '.join(self.types))
+            return "{0} {1}" .format(self.name, ' '.join(self.types))
 
 
 class Function(TypeOperator):
