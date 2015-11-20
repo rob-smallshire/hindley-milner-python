@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 '''
 .. module:: hindley_milner
@@ -11,7 +10,8 @@
 
 from __future__ import print_function
 
-#=======================================================#
+
+# =======================================================#
 # Class definitions for the abstract syntax tree nodes
 # which comprise the little language for which types
 # will be inferred
@@ -72,8 +72,7 @@ class Letrec(object):
         return "(letrec {v} = {defn} in {body})".format(v=self.v, defn=self.defn, body=self.body)
 
 
-
-#=======================================================#
+# =======================================================#
 # Exception types
 
 class TypeError(Exception):
@@ -90,6 +89,7 @@ class TypeError(Exception):
 
 class ParseError(Exception):
     """Raised if the type environment supplied for is incomplete"""
+
     def __init__(self, message):
         self.__message = message
 
@@ -99,8 +99,7 @@ class ParseError(Exception):
         return str(self.message)
 
 
-
-#=======================================================#
+# =======================================================#
 # Types and type constructors
 
 class TypeVariable(object):
@@ -167,11 +166,10 @@ class Function(TypeOperator):
 
 # Basic types are constructed with a nullary type constructor
 Integer = TypeOperator("int", [])  # Basic integer
-Bool    = TypeOperator("bool", []) # Basic bool
+Bool = TypeOperator("bool", [])  # Basic bool
 
 
-
-#=======================================================#
+# =======================================================#
 # Type inference machinery
 
 def analyse(node, env, non_generic=None):
@@ -265,7 +263,7 @@ def fresh(t, non_generic):
         t: A type to be copied.
         non_generic: A set of non-generic TypeVariables
     """
-    mappings = {} # A mapping of TypeVariables to TypeVariables
+    mappings = {}  # A mapping of TypeVariables to TypeVariables
 
     def freshrec(tp):
         p = prune(tp)
@@ -390,6 +388,7 @@ def occursIn(t, types):
     """
     return any(occursInType(t, t2) for t2 in types)
 
+
 def isIntegerLiteral(name):
     """Checks whether name is an integer literal string.
 
@@ -407,8 +406,7 @@ def isIntegerLiteral(name):
     return result
 
 
-
-#==================================================================#
+# ==================================================================#
 # Example code to exercise the above
 
 
@@ -448,73 +446,72 @@ def main():
 
     var3 = TypeVariable()
 
-    my_env = { "pair" : Function(var1, Function(var2, pair_type)),
-               "true" : Bool,
-               "cond" : Function(Bool, Function(var3, Function(var3, var3))),
-               "zero" : Function(Integer, Bool),
-               "pred" : Function(Integer, Integer),
-               "times": Function(Integer, Function(Integer, Integer)) }
+    my_env = {"pair": Function(var1, Function(var2, pair_type)),
+              "true": Bool,
+              "cond": Function(Bool, Function(var3, Function(var3, var3))),
+              "zero": Function(Integer, Bool),
+              "pred": Function(Integer, Integer),
+              "times": Function(Integer, Function(Integer, Integer))}
 
     pair = Apply(Apply(Ident("pair"), Apply(Ident("f"), Ident("4"))), Apply(Ident("f"), Ident("true")))
 
     examples = [
-            # factorial
-            Letrec("factorial", # letrec factorial =
-                Lambda("n",    # fn n =>
-                    Apply(
-                        Apply(   # cond (zero n) 1
-                            Apply(Ident("cond"),     # cond (zero n)
-                                Apply(Ident("zero"), Ident("n"))),
-                            Ident("1")),
-                        Apply(    # times n
-                            Apply(Ident("times"), Ident("n")),
-                            Apply(Ident("factorial"),
-                                Apply(Ident("pred"), Ident("n")))
-                        )
-                    )
-                ),      # in
-                Apply(Ident("factorial"), Ident("5"))
-            ),
+        # factorial
+        Letrec("factorial",  # letrec factorial =
+               Lambda("n",  # fn n =>
+                      Apply(
+                          Apply(  # cond (zero n) 1
+                              Apply(Ident("cond"),  # cond (zero n)
+                                    Apply(Ident("zero"), Ident("n"))),
+                              Ident("1")),
+                          Apply(  # times n
+                              Apply(Ident("times"), Ident("n")),
+                              Apply(Ident("factorial"),
+                                    Apply(Ident("pred"), Ident("n")))
+                          )
+                      )
+                      ),  # in
+               Apply(Ident("factorial"), Ident("5"))
+               ),
 
-            # Should fail:
-            # fn x => (pair(x(3) (x(true)))
-            Lambda("x",
-                Apply(
-                    Apply(Ident("pair"),
-                        Apply(Ident("x"), Ident("3"))),
-                    Apply(Ident("x"), Ident("true")))),
+        # Should fail:
+        # fn x => (pair(x(3) (x(true)))
+        Lambda("x",
+               Apply(
+                   Apply(Ident("pair"),
+                         Apply(Ident("x"), Ident("3"))),
+                   Apply(Ident("x"), Ident("true")))),
 
-            # pair(f(3), f(true))
-            Apply(
-                Apply(Ident("pair"), Apply(Ident("f"), Ident("4"))),
-                Apply(Ident("f"), Ident("true"))),
+        # pair(f(3), f(true))
+        Apply(
+            Apply(Ident("pair"), Apply(Ident("f"), Ident("4"))),
+            Apply(Ident("f"), Ident("true"))),
 
+        # let f = (fn x => x) in ((pair (f 4)) (f true))
+        Let("f", Lambda("x", Ident("x")), pair),
 
-            # let f = (fn x => x) in ((pair (f 4)) (f true))
-            Let("f", Lambda("x", Ident("x")), pair),
+        # fn f => f f (fail)
+        Lambda("f", Apply(Ident("f"), Ident("f"))),
 
-            # fn f => f f (fail)
-            Lambda("f", Apply(Ident("f"), Ident("f"))),
+        # let g = fn f => 5 in g g
+        Let("g",
+            Lambda("f", Ident("5")),
+            Apply(Ident("g"), Ident("g"))),
 
-            # let g = fn f => 5 in g g
-            Let("g",
-                Lambda("f", Ident("5")),
-                Apply(Ident("g"), Ident("g"))),
+        # example that demonstrates generic and non-generic variables:
+        # fn g => let f = fn x => g in pair (f 3, f true)
+        Lambda("g",
+               Let("f",
+                   Lambda("x", Ident("g")),
+                   Apply(
+                       Apply(Ident("pair"),
+                             Apply(Ident("f"), Ident("3"))
+                             ),
+                       Apply(Ident("f"), Ident("true"))))),
 
-            # example that demonstrates generic and non-generic variables:
-            # fn g => let f = fn x => g in pair (f 3, f true)
-            Lambda("g",
-                   Let("f",
-                       Lambda("x", Ident("g")),
-                       Apply(
-                            Apply(Ident("pair"),
-                                  Apply(Ident("f"), Ident("3"))
-                            ),
-                            Apply(Ident("f"), Ident("true"))))),
-
-            # Function composition
-            # fn f (fn g (fn arg (f g arg)))
-            Lambda("f", Lambda("g", Lambda("arg", Apply(Ident("g"), Apply(Ident("f"), Ident("arg"))))))
+        # Function composition
+        # fn f (fn g (fn arg (f g arg)))
+        Lambda("f", Lambda("g", Lambda("arg", Apply(Ident("g"), Apply(Ident("f"), Ident("arg"))))))
     ]
 
     for example in examples:
@@ -523,4 +520,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
