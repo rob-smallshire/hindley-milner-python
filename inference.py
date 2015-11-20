@@ -119,7 +119,8 @@ class TypeVariable(object):
 
     next_variable_name = 'a'
 
-    def _getName(self):
+    @property
+    def name(self):
         """Names are allocated to TypeVariables lazily, so that only TypeVariables
         present
         """
@@ -127,8 +128,6 @@ class TypeVariable(object):
             self.__name = TypeVariable.next_variable_name
             TypeVariable.next_variable_name = chr(ord(TypeVariable.next_variable_name) + 1)
         return self.__name
-
-    name = property(_getName)
 
     def __str__(self):
         if self.instance is not None:
