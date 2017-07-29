@@ -122,7 +122,7 @@ class TypeVariable(object):
     @property
     def name(self):
         """Names are allocated to TypeVariables lazily, so that only TypeVariables
-        present
+        present after analysis consume names.
         """
         if self.__name is None:
             self.__name = TypeVariable.next_variable_name
@@ -174,7 +174,7 @@ Bool = TypeOperator("bool", [])  # Basic bool
 def analyse(node, env, non_generic=None):
     """Computes the type of the expression given by node.
 
-    The type of the node is computed in the context of the context of the
+    The type of the node is computed in the context of the
     supplied type environment env. Data types can be introduced into the
     language simply by having a predefined set of identifiers in the initial
     environment. environment; this way there is no need to change the syntax or, more
