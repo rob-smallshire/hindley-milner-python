@@ -419,7 +419,7 @@ def try_exp(env, node):
     Returns:
         None
     """
-    print(str(node) + " : ", end=' ')
+    print(str(node) + " :", end=' ')
     try:
         t = analyse(node, env)
         print(str(t))
